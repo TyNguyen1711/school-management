@@ -25,6 +25,7 @@ export default function DashboardLayout({
       {/* RIGHT */}
       <div className="w-[86%] md:w-[92%] lg:w-[84%] xl:w-[86%] p-4 bg-[#F7F8FA] overflow-auto">
         <Navbar />
+        <div className="mt-8">{children}</div>
       </div>
     </div>
   );
