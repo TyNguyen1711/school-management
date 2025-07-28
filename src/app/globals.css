@@ -24,3 +24,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.react-calendar__title--active {
+  background-color: #C3EBFA !important;
+  color: black !important;
+}
+
+.react-calendar__navigation__label__labelText {
+  font-weight: 600;
+}
+
+.react-calendar {
+  width: 100% !important;
+  border: none !important;
+  font-family: "inter", sans-serif !important;
+}
