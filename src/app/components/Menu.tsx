@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import { role } from "../libs/data";
 const menuItems = [
   {
     title: "MENU",
@@ -120,17 +121,17 @@ const Menu = () => {
     <div>
       {menuItems.map((section) => (
         <div key={section.title} className="mb-4">
-          <h3 className="hidden lg:block text-lg font-light text-gray-500 mt-4">
+          <h3 className="hidden lg:block text-lg font-light text-gray-500 py-1 px-1">
             {section.title}
           </h3>
           <ul className="space-y-2">
             {section.items.map(
               (item) =>
-                item.visible.includes("teacher") && (
-                  <li key={item.label} className="mt-4 pl-1">
+                item.visible.includes(role) && (
+                  <li key={item.label} className="mt-2">
                     <Link
                       href={item.href}
-                      className="flex items-center justify-center lg:justify-start gap-4 py-2 hover:bg-gray-200 rounded"
+                      className="flex items-center justify-center lg:justify-start md:px-2 gap-4 py-2 hover:bg-[#EDF9FD] rounded"
                     >
                       <Image
                         src={item.icon}
