@@ -11,21 +11,18 @@ const BigCalendar = () => {
     setView(selectedView);
   };
   return (
-    <div className="w-full h-full">
-      {" "}
-      <Calendar
-        localizer={localizer}
-        events={calendarEvents}
-        onView={handleChangeView}
-        startAccessor="start"
-        views={["work_week", "day"]}
-        view={view}
-        endAccessor="end"
-        style={{ height: "98%" }}
-        min={new Date(2025, 1, 0, 7, 0, 0)}
-        max={new Date(2025, 1, 0, 17, 0, 0)}
-      />
-    </div>
+    <Calendar
+      localizer={localizer}
+      events={calendarEvents}
+      onView={handleChangeView}
+      startAccessor="start"
+      views={["work_week", "day"]}
+      view={view}
+      endAccessor="end"
+      style={{ height: "98%" }}
+      min={new Date(2025, 1, 0, 7, 0, 0)}
+      max={new Date(2025, 1, 0, 17, 0, 0)}
+    />
   );
 };
 
