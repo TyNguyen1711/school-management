@@ -1,3 +1,4 @@
+import FormModel from "@/app/components/FormModel";
 import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
@@ -64,15 +65,18 @@ const ClassListPage = () => {
 
         <td>
           <div className="flex items-center gap-2">
-            <Link href={`/list/teachers/${data.id}`}>
+            {/* <Link href={`/list/teachers/${data.id}`}>
               <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
                 <Image src="/view.png" alt="" width={16} height={16} />
               </button>
-            </Link>
+            </Link> */}
+            <FormModel table="class" type="update" />
+
             {role === "admin" && (
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
-                <Image src="/delete.png" alt="" width={16} height={16} />
-              </button>
+              // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
+              //   <Image src="/delete.png" alt="" width={16} height={16} />
+              // </button>
+              <FormModel table="class" type="delete" />
             )}
           </div>
         </td>
@@ -95,9 +99,10 @@ const ClassListPage = () => {
             </button>
 
             {role === "admin" && (
-              <button className="h-8 w-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
-                <Image src="/plus.png" alt="filter" width={15} height={15} />
-              </button>
+              // <button className="h-8 w-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
+              //   <Image src="/plus.png" alt="filter" width={15} height={15} />
+              // </button>
+              <FormModel table="class" type="create" />
             )}
           </div>
         </div>

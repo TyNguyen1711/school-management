@@ -1,3 +1,4 @@
+import FormModel from "@/app/components/FormModel";
 import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
@@ -85,9 +86,10 @@ const TeacherListPage = () => {
               </button>
             </Link>
             {role === "admin" && (
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
-                <Image src="/delete.png" alt="" width={16} height={16} />
-              </button>
+              // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
+              //   <Image src="/delete.png" alt="" width={16} height={16} />
+              // </button>
+              <FormModel table="teacher" type="delete" />
             )}
           </div>
         </td>
@@ -110,9 +112,10 @@ const TeacherListPage = () => {
             </button>
 
             {role === "admin" && (
-              <button className="h-8 w-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
-                <Image src="/plus.png" alt="filter" width={15} height={15} />
-              </button>
+              // <button className="h-8 w-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
+              //   <Image src="/plus.png" alt="filter" width={15} height={15} />
+              // </button>
+              <FormModel table="teacher" type="create" />
             )}
           </div>
         </div>
