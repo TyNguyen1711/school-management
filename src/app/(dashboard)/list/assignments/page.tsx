@@ -2,6 +2,7 @@ import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
 import {
+  assignmentsData,
   examsData,
   parentsData,
   role,
@@ -12,12 +13,12 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-type Exam = {
+type Assignment = {
   id: number;
   subject: string;
   class: string;
   teacher: string;
-  date: string;
+  dueDate: string;
 };
 
 const columns = [
@@ -35,8 +36,8 @@ const columns = [
     className: "hidden md:table-cell",
   },
   {
-    header: "Date",
-    accessor: "date",
+    header: "Due Date",
+    accessor: "dueDate",
     className: "hidden md:table-cell",
   },
   {
@@ -45,8 +46,8 @@ const columns = [
   },
 ];
 
-const ExamListPage = () => {
-  const renderRow = (data: Exam) => {
+const AssignmentListPage = () => {
+  const renderRow = (data: Assignment) => {
     return (
       <tr
         key={data.id}
@@ -58,7 +59,7 @@ const ExamListPage = () => {
         <td>{data.class}</td>
         <td className="hidden md:table-cell">{data.teacher}</td>
 
-        <td className="hidden md:table-cell">{data.date}</td>
+        <td className="hidden md:table-cell">{data.dueDate}</td>
 
         <td>
           <div className="flex items-center gap-2">
@@ -80,7 +81,9 @@ const ExamListPage = () => {
   return (
     <div className="bg-white flex-1 p-4 mt-0 rounded-md">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block font-semibold text-lg">All Exams</h1>
+        <h1 className="hidden md:block font-semibold text-lg">
+          All Assignments
+        </h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end  md:mb-2">
@@ -101,7 +104,7 @@ const ExamListPage = () => {
         </div>
       </div>
       <div></div>
-      <Table columns={columns} renderRow={renderRow} data={examsData} />
+      <Table columns={columns} renderRow={renderRow} data={assignmentsData} />
       <div>
         <Pagination />
       </div>
@@ -109,4 +112,4 @@ const ExamListPage = () => {
   );
 };
 
-export default ExamListPage;
+export default AssignmentListPage;
