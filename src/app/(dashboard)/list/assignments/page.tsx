@@ -1,4 +1,4 @@
-import FormModel from "@/app/components/FormModel";
+import FormModal from "@/app/components/FormModal";
 import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
@@ -69,13 +69,13 @@ const AssignmentListPage = () => {
                 <Image src="/view.png" alt="" width={16} height={16} />
               </button>
             </Link> */}
-            <FormModel table="assignment" type="update" />
+            <FormModal table="assignment" type="update" />
 
             {role === "admin" && (
               //   <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
               //     <Image src="/delete.png" alt="" width={16} height={16} />
               //   </button>
-              <FormModel table="assignment" type="delete" />
+              <FormModal table="assignment" type="delete" />
             )}
           </div>
         </td>
@@ -103,7 +103,7 @@ const AssignmentListPage = () => {
               //   <button className="h-8 w-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
               //     <Image src="/plus.png" alt="filter" width={15} height={15} />
               //   </button>
-              <FormModel table="assignment" type="create" />
+              <FormModal table="assignment" type="create" />
             )}
           </div>
         </div>
