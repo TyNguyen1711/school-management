@@ -1,10 +1,10 @@
-import UserCard from "@/app/components/UserCard";
+import UserCard from "@/components/UserCard";
 import React from "react";
-import CountChart from "@/app/components/CountChart";
-import AttendanceChart from "@/app/components/AttendanceChart";
-import FinanceChart from "@/app/components/FinanceChart";
-import EventCalendar from "@/app/components/EventCalendar";
-import Announcements from "@/app/components/Announcements";
+import CountChart from "@/components/CountChart";
+import AttendanceChart from "@/components/AttendanceChart";
+import FinanceChart from "@/components/FinanceChart";
+import EventCalendar from "@/components/EventCalendar";
+import Announcements from "@/components/Announcements";
 const AdminPage = () => {
   return (
     <div className="flex flex-col md:flex-row gap-4">

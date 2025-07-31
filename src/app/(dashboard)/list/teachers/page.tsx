@@ -1,8 +1,8 @@
-import FormModel from "@/app/components/FormModal";
-import Pagination from "@/app/components/Pagination";
-import Table from "@/app/components/Table";
-import TableSearch from "@/app/components/TableSearch";
-import { role, teachersData } from "@/app/libs/data";
+import FormModel from "@/components/FormModal";
+import Pagination from "@/components/Pagination";
+import Table from "@/components/Table";
+import TableSearch from "@/components/TableSearch";
+import { role, teachersData } from "@/libs/data";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";

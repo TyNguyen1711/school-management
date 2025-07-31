@@ -1,8 +1,8 @@
-import Announcements from "@/app/components/Announcements";
-import BigCalendar from "@/app/components/BigCalendar";
-import FormModal from "@/app/components/FormModal";
-import Performance from "@/app/components/Performance";
-import { role } from "@/app/libs/data";
+import Announcements from "@/components/Announcements";
+import BigCalendar from "@/components/BigCalendar";
+import FormModal from "@/components/FormModal";
+import Performance from "@/components/Performance";
+import { role } from "@/libs/data";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";

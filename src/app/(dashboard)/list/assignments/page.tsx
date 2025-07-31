@@ -1,7 +1,7 @@
-import FormModal from "@/app/components/FormModal";
-import Pagination from "@/app/components/Pagination";
-import Table from "@/app/components/Table";
-import TableSearch from "@/app/components/TableSearch";
+import FormModal from "@/components/FormModal";
+import Pagination from "@/components/Pagination";
+import Table from "@/components/Table";
+import TableSearch from "@/components/TableSearch";
 import {
   assignmentsData,
   examsData,
@@ -10,7 +10,7 @@ import {
   studentsData,
   subjectsData,
   teachersData,
-} from "@/app/libs/data";
+} from "@/libs/data";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
