@@ -24,7 +24,7 @@ const schema = z.object({
   sex: z.enum(["male, female"], { message: "Sex is required!" }),
   photo: z.instanceof(File, { message: "Image is required!" }),
 });
-const TeacherForm = ({
+const StudentForm = ({
   type,
   data,
 }: {
@@ -44,7 +44,7 @@ const TeacherForm = ({
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
-        {type === "create" ? "Create a new teacher" : "Update a teacher"}
+        {type === "create" ? "Create a new student" : "Update a student"}
       </h1>
       <div className="text-xs text-gray-500 font-medium">
         Authentication Infomation
@@ -172,4 +172,4 @@ const TeacherForm = ({
   );
 };
 
-export default TeacherForm;
+export default StudentForm;

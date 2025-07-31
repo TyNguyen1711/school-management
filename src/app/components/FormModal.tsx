@@ -2,7 +2,20 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import TeacherForm from "./forms/TeacherForm";
+import StudentForm from "./forms/StudentForm";
+import ParentForm from "./forms/ParentForm";
+import ExamForm from "./forms/ExamForm";
+import EventForm from "./forms/EventForm";
 
+const forms: {
+  [key: string]: (type: "create" | "update", data?: any) => React.ReactElement;
+} = {
+  teacher: (type, data) => <TeacherForm type={type} data={data} />,
+  student: (type, data) => <StudentForm type={type} data={data} />,
+  parent: (type, data) => <ParentForm type={type} data={data} />,
+  exam: (type, data) => <ExamForm type={type} data={data} />,
+  event: (type, data) => <EventForm type={type} data={data} />,
+};
 const FormModel = ({
   table,
   type,
@@ -45,8 +58,10 @@ const FormModel = ({
           Delete
         </button>
       </div>
+    ) : type === "create" || type === "update" ? (
+      forms[table](type, data)
     ) : (
-      <TeacherForm type="update" data={data} />
+      "Not found"
     );
   };
   return (

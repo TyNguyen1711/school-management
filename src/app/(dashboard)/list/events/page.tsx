@@ -85,7 +85,7 @@ const EventListPage = () => {
   return (
     <div className="bg-white flex-1 p-4 mt-0 rounded-md">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block font-semibold text-lg">All Results</h1>
+        <h1 className="hidden md:block font-semibold text-lg">All Events</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end  md:mb-2">
