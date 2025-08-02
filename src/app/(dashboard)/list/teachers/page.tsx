@@ -2,21 +2,15 @@ import FormModel from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import { Class, Subject, Teacher } from "../../../../../generated/prisma";
 import { role, teachersData } from "@/libs/data";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-type Teacher = {
-  id: number;
-  teacherId: string;
-  name: string;
-  email?: string;
-  photo: string;
-  phone: string;
-  subjects: string[];
-  classes: string[];
-  address: string;
-};
+import { prisma } from "@/libs/prisma";
+import { ITEM_PER_PAGE } from "@/libs/setting";
+import { Prisma } from "@prisma/client";
+type teacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
 const columns = [
   {
     header: "Info",
@@ -52,50 +46,87 @@ const columns = [
     accessor: "action",
   },
 ];
-const TeacherListPage = () => {
-  const renderRow = (data: Teacher) => {
-    return (
-      <tr
-        key={data.id}
-        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
-      >
-        <td className="flex gap-4 p-4">
-          <Image
-            src={data.photo}
-            alt="image"
-            width={40}
-            height={40}
-            className="rounded-full hidden lg:block"
-          />
-          <div className="flex flex-col">
-            <h3 className="font-semibold">{data.name}</h3>
-            <p className="text-gray-500 text-xs">{data.email}</p>
-          </div>
-        </td>
-        <td className="hidden md:table-cell">{data.teacherId}</td>
-        <td className="hidden md:table-cell">{data.subjects.join(", ")}</td>
+const renderRow = (data: teacherList) => {
+  return (
+    <tr
+      key={data.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
+    >
+      <td className="flex gap-4 p-4">
+        <Image
+          src={data.img || "/profile.png"}
+          alt="image"
+          width={40}
+          height={40}
+          className="rounded-full hidden lg:block"
+        />
+        <div className="flex flex-col">
+          <h3 className="font-semibold">{data.name}</h3>
+          <p className="text-gray-500 text-xs">{data.email}</p>
+        </div>
+      </td>
+      <td className="hidden md:table-cell">{data.username}</td>
+      <td className="hidden md:table-cell">
+        {data.subjects.map((item) => item.name).join(", ")}
+      </td>
 
-        <td className="hidden md:table-cell">{data.classes.join(", ")}</td>
-        <td className="hidden lg:table-cell">{data.phone}</td>
-        <td className="hidden lg:table-cell">{data.address}</td>
-        <td>
-          <div className="flex items-center gap-2">
-            <Link href={`/list/teachers/${data.id}`}>
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
-                <Image src="/view.png" alt="" width={16} height={16} />
-              </button>
-            </Link>
-            {role === "admin" && (
-              // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
-              //   <Image src="/delete.png" alt="" width={16} height={16} />
-              // </button>
-              <FormModel table="teacher" type="delete" />
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  };
+      <td className="hidden md:table-cell">
+        {data.classes.map((item) => item.name).join(", ")}
+      </td>
+      <td className="hidden lg:table-cell">{data.phone}</td>
+      <td className="hidden lg:table-cell">{data.address}</td>
+      <td>
+        <div className="flex items-center gap-2">
+          <Link href={`/list/teachers/${data.id}`}>
+            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
+              <Image src="/view.png" alt="" width={16} height={16} />
+            </button>
+          </Link>
+          {role === "admin" && <FormModel table="teacher" type="delete" />}
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+const TeacherListPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+  const { page, ...queryParams } = await searchParams;
+  const p = page ? parseInt(page) : 1;
+  const query: Prisma.TeacherWhereInput = {};
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "classId":
+            query.lessons = {
+              some: {
+                classId: parseInt(value),
+              },
+            };
+            break;
+          case "search":
+            query.name = { contains: value, mode: "insensitive" };
+        }
+      }
+    }
+  }
+  const [teachers, count] = await prisma.$transaction([
+    prisma.teacher.findMany({
+      where: query,
+      include: {
+        subjects: true,
+        classes: true,
+      },
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.teacher.count({ where: query }),
+  ]);
+
   return (
     <div className="bg-white flex-1 p-4 mt-0 rounded-md">
       <div className="flex items-center justify-between">
@@ -121,9 +152,9 @@ const TeacherListPage = () => {
         </div>
       </div>
       <div></div>
-      <Table columns={columns} renderRow={renderRow} data={teachersData} />
+      <Table columns={columns} renderRow={renderRow} data={teachers} />
       <div>
-        <Pagination />
+        <Pagination page={p} count={count} />
       </div>
     </div>
   );

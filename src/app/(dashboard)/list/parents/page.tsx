@@ -3,18 +3,13 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { parentsData, role, studentsData, teachersData } from "@/libs/data";
+import { prisma } from "@/libs/prisma";
+import { ITEM_PER_PAGE } from "@/libs/setting";
+import { Parent, Prisma, Student } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-type Parent = {
-  id: number;
-  name: string;
-  email?: string;
-  students: string[];
-  phone: string;
-  address: string;
-};
-
+type ParentList = Parent & { students: Student[] };
 const columns = [
   {
     header: "Info",
@@ -40,41 +35,74 @@ const columns = [
     accessor: "action",
   },
 ];
-const ParentListPage = () => {
-  const renderRow = (data: Parent) => {
-    return (
-      <tr
-        key={data.id}
-        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
-      >
-        <td className="flex gap-4 p-4">
-          <div className="flex flex-col">
-            <h3 className="font-semibold">{data.name}</h3>
-            <p className="text-gray-500 text-xs">{data?.email}</p>
-          </div>
-        </td>
-        <td className="hidden md:table-cell">{data.students.join(", ")}</td>
-        <td className="hidden lg:table-cell">{data.phone}</td>
-        <td className="hidden lg:table-cell">{data.address}</td>
-        <td>
-          <div className="flex items-center gap-2">
-            {/* <Link href={`/list/teachers/${data.id}`}>
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
-                <Image src="/view.png" alt="" width={16} height={16} />
-              </button>
-            </Link> */}
-            <FormModel table="parent" type="update" />
-            {role === "admin" && (
-              // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
-              //   <Image src="/delete.png" alt="" width={16} height={16} />
-              // </button>
-              <FormModel table="parent" type="delete" />
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  };
+const renderRow = (data: ParentList) => {
+  return (
+    <tr
+      key={data.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
+    >
+      <td className="flex gap-4 p-4">
+        <div className="flex flex-col">
+          <h3 className="font-semibold">{data.name}</h3>
+          <p className="text-gray-500 text-xs">{data?.email}</p>
+        </div>
+      </td>
+      <td className="hidden md:table-cell">
+        {data.students.map((item) => item.name).join(", ")}
+      </td>
+      <td className="hidden lg:table-cell">{data.phone}</td>
+      <td className="hidden lg:table-cell">{data.address}</td>
+      <td>
+        <div className="flex items-center gap-2">
+          {/* <Link href={`/list/teachers/${data.id}`}>
+            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
+              <Image src="/view.png" alt="" width={16} height={16} />
+            </button>
+          </Link> */}
+          <FormModel table="parent" type="update" />
+          {role === "admin" && (
+            // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
+            //   <Image src="/delete.png" alt="" width={16} height={16} />
+            // </button>
+            <FormModel table="parent" type="delete" />
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+};
+const ParentListPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+  const { page, ...queryParams } = await searchParams;
+  const p = page ? parseInt(page) : 1;
+  const query: Prisma.ParentWhereInput = {};
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "search":
+            query.name = { contains: value, mode: "insensitive" };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+  const [parents, count] = await prisma.$transaction([
+    prisma.parent.findMany({
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+      include: {
+        students: true,
+      },
+      where: query,
+    }),
+    prisma.parent.count({ where: query }),
+  ]);
   return (
     <div className="bg-white flex-1 p-4 mt-0 rounded-md">
       <div className="flex items-center justify-between">
@@ -100,9 +128,9 @@ const ParentListPage = () => {
         </div>
       </div>
       <div></div>
-      <Table columns={columns} renderRow={renderRow} data={parentsData} />
+      <Table columns={columns} renderRow={renderRow} data={parents} />
       <div>
-        <Pagination />
+        <Pagination page={p} count={count} />
       </div>
     </div>
   );
