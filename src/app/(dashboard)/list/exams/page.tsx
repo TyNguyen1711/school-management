@@ -10,17 +10,26 @@ import {
   subjectsData,
   teachersData,
 } from "@/libs/data";
+import { prisma } from "@/libs/prisma";
+import { ITEM_PER_PAGE } from "@/libs/setting";
+import { Class, Exam, Lesson, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-type Exam = {
-  id: number;
-  subject: string;
-  class: string;
-  teacher: string;
-  date: string;
+// type Exam = {
+//   id: number;
+//   subject: string;
+//   class: string;
+//   teacher: string;
+//   date: string;
+// };
+type ExamList = Exam & {
+  lesson: {
+    subject: Subject;
+    class: Class;
+    teacher: Teacher;
+  };
 };
-
 const columns = [
   {
     header: "Subject Name",
@@ -46,40 +55,86 @@ const columns = [
   },
 ];
 
-const ExamListPage = () => {
-  const renderRow = (data: Exam) => {
-    return (
-      <tr
-        key={data.id}
-        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
-      >
-        <td className="flex gap-4 p-4">
-          <h3 className="font-semibold">{data.subject}</h3>
-        </td>
-        <td>{data.class}</td>
-        <td className="hidden md:table-cell">{data.teacher}</td>
+const renderRow = (data: ExamList) => {
+  return (
+    <tr
+      key={data.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
+    >
+      <td className="flex gap-4 p-4">
+        <h3 className="font-semibold">{data.lesson.subject.name}</h3>
+      </td>
+      <td>{data.lesson.class.name}</td>
+      <td className="hidden md:table-cell">{data.lesson.teacher.name}</td>
 
-        <td className="hidden md:table-cell">{data.date}</td>
+      <td className="hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-US").format(data.startTime)}
+      </td>
 
-        <td>
-          <div className="flex items-center gap-2">
-            {/* <Link href={`/list/teachers/${data.id}`}>
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
-                <Image src="/view.png" alt="" width={16} height={16} />
-              </button>
-            </Link> */}
-            <FormModel table="exam" type="update" />
-            {role === "admin" && (
-              //   <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
-              //     <Image src="/delete.png" alt="" width={16} height={16} />
-              //   </button>
-              <FormModel table="exam" type="delete" />
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  };
+      <td>
+        <div className="flex items-center gap-2">
+          {/* <Link href={`/list/teachers/${data.id}`}>
+            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
+              <Image src="/view.png" alt="" width={16} height={16} />
+            </button>
+          </Link> */}
+          <FormModel table="exam" type="update" />
+          {role === "admin" && (
+            //   <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
+            //     <Image src="/delete.png" alt="" width={16} height={16} />
+            //   </button>
+            <FormModel table="exam" type="delete" />
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+};
+const ExamListPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+  const { page, ...queryParams } = await searchParams;
+  const p = page ? parseInt(page) : 1;
+  const query: Prisma.ExamWhereInput = {};
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "classId":
+            query.lesson = { classId: parseInt(value) };
+            break;
+          case "teacherId":
+            query.lesson = { teacherId: value };
+            break;
+          case "search":
+            query.lesson = {
+              subject: {
+                name: { contains: value, mode: "insensitive" },
+              },
+            };
+        }
+      }
+    }
+  }
+  const [exams, count] = await prisma.$transaction([
+    prisma.exam.findMany({
+      where: query,
+      include: {
+        lesson: {
+          select: {
+            subject: { select: { name: true } },
+            class: { select: { name: true } },
+            teacher: { select: { name: true, surname: true } },
+          },
+        },
+      },
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.exam.count({ where: query }),
+  ]);
   return (
     <div className="bg-white flex-1 p-4 mt-0 rounded-md">
       <div className="flex items-center justify-between">
@@ -105,9 +160,9 @@ const ExamListPage = () => {
         </div>
       </div>
       <div></div>
-      <Table columns={columns} renderRow={renderRow} data={examsData} />
+      <Table columns={columns} renderRow={renderRow} data={exams} />
       <div>
-        <Pagination />
+        <Pagination page={p} count={count} />
       </div>
     </div>
   );
