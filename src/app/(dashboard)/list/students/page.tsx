@@ -11,17 +11,6 @@ import Link from "next/link";
 import React from "react";
 import { Prisma } from "@prisma/client";
 
-// type Student = {
-//   id: number;
-//   studentId: string;
-//   name: string;
-//   email?: string;
-//   photo: string;
-//   phone?: string;
-//   grade: number;
-//   class: string;
-//   address: string;
-// };
 type StudentList = Student & { class: Class };
 const columns = [
   {

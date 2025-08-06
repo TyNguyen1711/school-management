@@ -2,25 +2,14 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import {
-  announcementsData,
-  assignmentsData,
-  examsData,
-  parentsData,
-  role,
-  studentsData,
-  subjectsData,
-  teachersData,
-} from "@/libs/data";
+import { announcementsData, role } from "@/libs/data";
+import { prisma } from "@/libs/prisma";
+import { ITEM_PER_PAGE } from "@/libs/setting";
+import { Announcement, Class, Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-type Announcement = {
-  id: number;
-  title: string;
-  class: string;
-  date: string;
-};
+type AnnouncementList = Announcement & { class: Class };
 
 const columns = [
   {
@@ -42,36 +31,73 @@ const columns = [
   },
 ];
 
-const AnnouncementListPage = () => {
-  const renderRow = (data: Announcement) => {
-    return (
-      <tr
-        key={data.id}
-        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
-      >
-        <td className="flex items-center gap-4 p-4">{data.title}</td>
-        <td>{data.class}</td>
-        <td className="hidden md:table-cell">{data.date}</td>
+const renderRow = (data: AnnouncementList) => {
+  return (
+    <tr
+      key={data.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
+    >
+      <td className="flex items-center gap-4 p-4">{data.title}</td>
+      <td>{data.class.name}</td>
+      <td className="hidden md:table-cell">
+        {" "}
+        {new Intl.DateTimeFormat("en-US").format(data.date)}
+      </td>
 
-        <td>
-          <div className="flex items-center gap-2">
-            {/* <Link href={`/list/teachers/${data.id}`}>
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
-                <Image src="/view.png" alt="" width={16} height={16} />
-              </button>
-            </Link> */}
-            <FormModal table="announcement" type="update" />
-            {role === "admin" && (
-              //   <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
-              //     <Image src="/delete.png" alt="" width={16} height={16} />
-              //   </button>
-              <FormModal table="announcement" type="delete" />
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  };
+      <td>
+        <div className="flex items-center gap-2">
+          {/* <Link href={`/list/teachers/${data.id}`}>
+            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
+              <Image src="/view.png" alt="" width={16} height={16} />
+            </button>
+          </Link> */}
+          <FormModal table="announcement" type="update" />
+          {role === "admin" && (
+            //   <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
+            //     <Image src="/delete.png" alt="" width={16} height={16} />
+            //   </button>
+            <FormModal table="announcement" type="delete" />
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+};
+const AnnouncementListPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+  const { page, ...queryParams } = await searchParams;
+  const p = page ? parseInt(page) : 1;
+  const query: Prisma.AnnouncementWhereInput = {};
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "search":
+            query.title = {
+              contains: value,
+              mode: "insensitive",
+            };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+  const [announcements, count] = await prisma.$transaction([
+    prisma.announcement.findMany({
+      where: query,
+      include: {
+        class: true,
+      },
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.announcement.count({ where: query }),
+  ]);
   return (
     <div className="bg-white flex-1 p-4 mt-0 rounded-md">
       <div className="flex items-center justify-between">
@@ -99,9 +125,9 @@ const AnnouncementListPage = () => {
         </div>
       </div>
       <div></div>
-      <Table columns={columns} renderRow={renderRow} data={announcementsData} />
+      <Table columns={columns} renderRow={renderRow} data={announcements} />
       <div>
-        <Pagination />
+        <Pagination page={p} count={count} />
       </div>
     </div>
   );

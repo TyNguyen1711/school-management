@@ -1,7 +1,12 @@
+import { UserButton } from "@clerk/nextjs";
+import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 import React from "react";
 
-const Navbar = () => {
+const Navbar = async () => {
+  const user = await currentUser();
+  console.log("Current User:", user);
+
   return (
     <div className="flex justify-between items-center">
       <div className="hidden lg:flex items-center gap-3 px-3 py-2 bg-transparent border border-gray-300 rounded-[100px]">
@@ -26,15 +31,18 @@ const Navbar = () => {
         <div className="flex items-center gap-5">
           <div className="flex flex-col items-end">
             <div className="font-medium text-xs leading-3">John Does</div>
-            <div className="text-gray-500 text-[10px]">Teacher</div>
+            <div className="text-gray-500 text-[10px]">
+              {user?.publicMetadata?.role as string}
+            </div>
           </div>
-          <Image
+          {/* <Image
             src="/avatar.png"
             alt="avatar"
             width={32}
             height={32}
             className="rounded-full"
-          />
+          /> */}
+          <UserButton />
         </div>
       </div>
     </div>
