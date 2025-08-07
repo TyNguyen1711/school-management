@@ -2,11 +2,11 @@ import Announcements from "@/components/Announcements";
 import BigCalendar from "@/components/BigCalendar";
 import FormModal from "@/components/FormModal";
 import Performance from "@/components/Performance";
-import { role } from "@/libs/data";
+
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-
+const role = "admin"; // This should be replaced with the actual role fetching logic
 const SingleTeacherPage = () => {
   return (
     <div className="flex flex-1 p-4 flex-col gap-4 xl:flex-row">

@@ -2,16 +2,18 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { announcementsData, role } from "@/libs/data";
+
 import { prisma } from "@/libs/prisma";
 import { ITEM_PER_PAGE } from "@/libs/setting";
+import { checkRole } from "@/libs/utils";
+import { auth } from "@clerk/nextjs/server";
 import { Announcement, Class, Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 type AnnouncementList = Announcement & { class: Class };
 
-const columns = [
+const columns_temp = [
   {
     header: "Title",
     accessor: "title",
@@ -31,43 +33,15 @@ const columns = [
   },
 ];
 
-const renderRow = (data: AnnouncementList) => {
-  return (
-    <tr
-      key={data.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
-    >
-      <td className="flex items-center gap-4 p-4">{data.title}</td>
-      <td>{data.class.name}</td>
-      <td className="hidden md:table-cell">
-        {" "}
-        {new Intl.DateTimeFormat("en-US").format(data.date)}
-      </td>
-
-      <td>
-        <div className="flex items-center gap-2">
-          {/* <Link href={`/list/teachers/${data.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
-              <Image src="/view.png" alt="" width={16} height={16} />
-            </button>
-          </Link> */}
-          <FormModal table="announcement" type="update" />
-          {role === "admin" && (
-            //   <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#CFCEFF]">
-            //     <Image src="/delete.png" alt="" width={16} height={16} />
-            //   </button>
-            <FormModal table="announcement" type="delete" />
-          )}
-        </div>
-      </td>
-    </tr>
-  );
-};
 const AnnouncementListPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
+  // const { sessionClaims } = await auth();
+  // const role = (sessionClaims?.metadata as { role: string })?.role;
+  const role = await checkRole();
+  const columns = role === "admin" ? columns_temp : columns_temp.slice(0, -1);
   const { page, ...queryParams } = await searchParams;
   const p = page ? parseInt(page) : 1;
   const query: Prisma.AnnouncementWhereInput = {};
@@ -98,6 +72,32 @@ const AnnouncementListPage = async ({
     }),
     prisma.announcement.count({ where: query }),
   ]);
+  const renderRow = (data: AnnouncementList) => {
+    return (
+      <tr
+        key={data.id}
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
+      >
+        <td className="flex items-center gap-4 p-4">{data.title}</td>
+        <td>{data.class.name}</td>
+        <td className="hidden md:table-cell">
+          {" "}
+          {new Intl.DateTimeFormat("en-US").format(data.date)}
+        </td>
+
+        <td>
+          <div className="flex items-center gap-2">
+            {role === "admin" && (
+              <>
+                <FormModal table="announcement" type="update" />
+                <FormModal table="announcement" type="delete" />
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
   return (
     <div className="bg-white flex-1 p-4 mt-0 rounded-md">
       <div className="flex items-center justify-between">
