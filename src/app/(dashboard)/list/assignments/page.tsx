@@ -4,12 +4,13 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { prisma } from "@/libs/prisma";
 import { ITEM_PER_PAGE } from "@/libs/setting";
-import { checkRole } from "@/libs/utils";
+import { checkCurrentId, checkRole } from "@/libs/utils";
 import { auth } from "@clerk/nextjs/server";
 import { Assignment, Class, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import { de } from "zod/locales";
 type AssignmentList = Assignment & {
   lesson: {
     subject: Subject;
@@ -47,9 +48,8 @@ const AssignmentListPage = async ({
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
-  // const { sessionClaims } = await auth();
-  // const role = (sessionClaims?.metadata as { role: string })?.role;
   const role = await checkRole();
+  const currentUserId = await checkCurrentId();
   const columns =
     role === "admin" || role === "teacher"
       ? columns_temp
@@ -57,25 +57,51 @@ const AssignmentListPage = async ({
   const { page, ...queryParams } = await searchParams;
   const p = page ? parseInt(page) : 1;
   const query: Prisma.AssignmentWhereInput = {};
+  query.lesson = {};
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
         switch (key) {
           case "classId":
-            query.lesson = { classId: parseInt(value) };
+            query.lesson.classId = parseInt(value);
             break;
           case "teacherId":
-            query.lesson = { teacherId: value };
+            query.lesson.teacherId = value;
             break;
           case "search":
-            query.lesson = {
-              subject: {
-                name: { contains: value, mode: "insensitive" },
-              },
+            query.lesson.subject = {
+              name: { contains: value, mode: "insensitive" },
             };
         }
       }
     }
+  }
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher":
+      query.lesson.teacherId = currentUserId!;
+    case "student":
+      query.lesson.class = {
+        students: {
+          some: {
+            id: currentUserId!,
+          },
+        },
+      };
+      break;
+
+    case "parent":
+      query.lesson.class = {
+        students: {
+          some: {
+            parentId: currentUserId!,
+          },
+        },
+      };
+      break;
+    default:
+      break;
   }
   const [assignments, count] = await prisma.$transaction([
     prisma.assignment.findMany({

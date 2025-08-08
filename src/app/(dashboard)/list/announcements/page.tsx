@@ -5,7 +5,7 @@ import TableSearch from "@/components/TableSearch";
 
 import { prisma } from "@/libs/prisma";
 import { ITEM_PER_PAGE } from "@/libs/setting";
-import { checkRole } from "@/libs/utils";
+import { checkCurrentId, checkRole } from "@/libs/utils";
 import { auth } from "@clerk/nextjs/server";
 import { Announcement, Class, Prisma } from "@prisma/client";
 import Image from "next/image";
@@ -38,9 +38,8 @@ const AnnouncementListPage = async ({
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
-  // const { sessionClaims } = await auth();
-  // const role = (sessionClaims?.metadata as { role: string })?.role;
   const role = await checkRole();
+  const currentUserId = await checkCurrentId();
   const columns = role === "admin" ? columns_temp : columns_temp.slice(0, -1);
   const { page, ...queryParams } = await searchParams;
   const p = page ? parseInt(page) : 1;
@@ -61,6 +60,18 @@ const AnnouncementListPage = async ({
       }
     }
   }
+  const roleCondition = {
+    teacher: { lessons: { some: { teacherId: currentUserId! } } },
+    student: { students: { some: { id: currentUserId! } } },
+    parent: { students: { some: { parentId: currentUserId! } } },
+  };
+  query.OR = [
+    { classId: null },
+    {
+      class: roleCondition[role as keyof typeof roleCondition] || {},
+    },
+  ];
+
   const [announcements, count] = await prisma.$transaction([
     prisma.announcement.findMany({
       where: query,
@@ -79,7 +90,7 @@ const AnnouncementListPage = async ({
         className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
       >
         <td className="flex items-center gap-4 p-4">{data.title}</td>
-        <td>{data.class.name}</td>
+        <td>{data.class?.name || "-"}</td>
         <td className="hidden md:table-cell">
           {" "}
           {new Intl.DateTimeFormat("en-US").format(data.date)}

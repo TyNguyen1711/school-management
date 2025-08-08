@@ -4,7 +4,7 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { prisma } from "@/libs/prisma";
 import { ITEM_PER_PAGE } from "@/libs/setting";
-import { checkRole } from "@/libs/utils";
+import { checkCurrentId, checkRole } from "@/libs/utils";
 import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
@@ -22,7 +22,7 @@ type ResultList = {
   startTime: Date;
 };
 
-const columns = [
+const columns_temp = [
   {
     header: "Title",
     accessor: "title",
@@ -63,6 +63,11 @@ const ResultListPage = async ({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
   const role = await checkRole();
+  const currentUserId = await checkCurrentId();
+  const columns =
+    role === "admin" || role === "teacher"
+      ? columns_temp
+      : columns_temp.slice(0, -1);
   const { page, ...queryParams } = await searchParams;
   const p = page ? parseInt(page) : 1;
   const query: Prisma.ResultWhereInput = {};
@@ -84,6 +89,27 @@ const ResultListPage = async ({
         }
       }
     }
+  }
+
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher":
+      query.OR = [
+        { exam: { lesson: { teacherId: currentUserId! } } },
+        { assignment: { lesson: { teacherId: currentUserId! } } },
+      ];
+      break;
+    case "student":
+      query.studentId = currentUserId!;
+      break;
+    case "parent":
+      query.student = {
+        parentId: currentUserId!,
+      };
+      break;
+    default:
+      break;
   }
   const [results, count] = await prisma.$transaction([
     prisma.result.findMany({
@@ -154,8 +180,12 @@ const ResultListPage = async ({
 
         <td>
           <div className="flex items-center gap-2">
-            <FormModel table="result" type="update" />
-            {role === "admin" && <FormModel table="result" type="delete" />}
+            {(role === "admin" || role === "teacher") && (
+              <>
+                <FormModel table="result" type="update" />
+                <FormModel table="result" type="delete" />
+              </>
+            )}
           </div>
         </td>
       </tr>
@@ -176,12 +206,7 @@ const ResultListPage = async ({
               <Image src="/sort.png" alt="filter" width={15} height={15} />
             </button>
 
-            {role === "admin" && (
-              //   <button className="h-8 w-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
-              //     <Image src="/plus.png" alt="filter" width={15} height={15} />
-              //   </button>
-              <FormModel table="result" type="create" />
-            )}
+            {role === "admin" && <FormModel table="result" type="create" />}
           </div>
         </div>
       </div>

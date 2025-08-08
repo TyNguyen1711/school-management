@@ -4,7 +4,7 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { prisma } from "@/libs/prisma";
 import { ITEM_PER_PAGE } from "@/libs/setting";
-import { checkRole } from "@/libs/utils";
+import { checkCurrentId, checkRole } from "@/libs/utils";
 import { auth } from "@clerk/nextjs/server";
 import { Class, Event, Prisma } from "@prisma/client";
 import Image from "next/image";
@@ -12,7 +12,7 @@ import Link from "next/link";
 import React from "react";
 
 type EventList = Event & { class: Class };
-const columns = [
+const columns_temp = [
   {
     header: "Title",
     accessor: "title",
@@ -48,6 +48,8 @@ const EventListPage = async ({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
   const role = await checkRole();
+  const currentUserId = await checkCurrentId();
+  const columns = role === "admin" ? columns_temp : columns_temp.slice(0, -1);
   const { page, ...queryParams } = await searchParams;
   const p = page ? parseInt(page) : 1;
   const query: Prisma.EventWhereInput = {};
@@ -67,6 +69,18 @@ const EventListPage = async ({
       }
     }
   }
+  const roleCondition = {
+    teacher: { lessons: { some: { teacherId: currentUserId! } } },
+    student: { students: { some: { id: currentUserId! } } },
+    parent: { students: { some: { parentId: currentUserId! } } },
+  };
+  query.OR = [
+    { classId: null },
+    {
+      class: roleCondition[role as keyof typeof roleCondition] || {},
+    },
+  ];
+
   const [events, count] = await prisma.$transaction([
     prisma.event.findMany({
       where: query,
@@ -85,7 +99,7 @@ const EventListPage = async ({
         className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#EDF9FD]"
       >
         <td className="flex items-center gap-4 p-4">{data.title}</td>
-        <td>{data.class.name}</td>
+        <td>{data.class?.name || "-"}</td>
         <td className="hidden md:table-cell">
           {" "}
           {new Intl.DateTimeFormat("en-US").format(data.startTime)}
@@ -107,8 +121,12 @@ const EventListPage = async ({
 
         <td>
           <div className="flex items-center gap-2">
-            <FormModel table="event" type="update" />
-            {role === "admin" && <FormModel table="event" type="delete" />}
+            {role === "admin" && (
+              <>
+                <FormModel table="event" type="update" />
+                <FormModel table="event" type="delete" />
+              </>
+            )}
           </div>
         </td>
       </tr>

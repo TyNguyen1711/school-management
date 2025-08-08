@@ -4,14 +4,14 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { prisma } from "@/libs/prisma";
 import { ITEM_PER_PAGE } from "@/libs/setting";
-import { checkRole } from "@/libs/utils";
+import { checkCurrentId, checkRole } from "@/libs/utils";
 import { auth } from "@clerk/nextjs/server";
 import { Parent, Prisma, Student } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 type ParentList = Parent & { students: Student[] };
-const columns = [
+const columns_temp = [
   {
     header: "Info",
     accessor: "info",
@@ -43,6 +43,8 @@ const ParentListPage = async ({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
   const role = await checkRole();
+  const currentUserId = await checkCurrentId();
+  const columns = role === "admin" ? columns_temp : columns_temp.slice(0, -1);
   const { page, ...queryParams } = await searchParams;
   const p = page ? parseInt(page) : 1;
   const query: Prisma.ParentWhereInput = {};
@@ -89,8 +91,12 @@ const ParentListPage = async ({
         <td className="hidden lg:table-cell">{data.address}</td>
         <td>
           <div className="flex items-center gap-2">
-            <FormModel table="parent" type="update" />
-            {role === "admin" && <FormModel table="parent" type="delete" />}
+            {role === "admin" && (
+              <>
+                <FormModel table="parent" type="update" />
+                <FormModel table="parent" type="delete" />
+              </>
+            )}
           </div>
         </td>
       </tr>
@@ -111,12 +117,7 @@ const ParentListPage = async ({
               <Image src="/sort.png" alt="filter" width={15} height={15} />
             </button>
 
-            {role === "admin" && (
-              // <button className="h-8 w-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
-              //   <Image src="/plus.png" alt="filter" width={15} height={15} />
-              // </button>
-              <FormModel table="parent" type="create" />
-            )}
+            {role === "admin" && <FormModel table="parent" type="create" />}
           </div>
         </div>
       </div>

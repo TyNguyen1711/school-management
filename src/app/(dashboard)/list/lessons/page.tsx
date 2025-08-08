@@ -5,7 +5,7 @@ import TableSearch from "@/components/TableSearch";
 
 import { prisma } from "@/libs/prisma";
 import { ITEM_PER_PAGE } from "@/libs/setting";
-import { checkRole } from "@/libs/utils";
+import { checkCurrentId, checkRole } from "@/libs/utils";
 import { auth } from "@clerk/nextjs/server";
 import { Class, Lesson, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
@@ -16,7 +16,7 @@ type LessonList = Lesson & { class: Class } & { subject: Subject } & {
   teacher: Teacher;
 };
 
-const columns = [
+const columns_temp = [
   {
     header: "Subject Name",
     accessor: "name",
@@ -42,6 +42,8 @@ const LessonListPage = async ({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
   const role = await checkRole();
+  const currentUserId = await checkCurrentId();
+  const columns = role === "admin" ? columns_temp : columns_temp.slice(0, -1);
   const { page, ...queryParams } = await searchParams;
   const p = page ? parseInt(page) : 1;
   const query: Prisma.LessonWhereInput = {};
@@ -63,6 +65,25 @@ const LessonListPage = async ({
         }
       }
     }
+  }
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher":
+      query.teacherId = currentUserId!;
+      break;
+    case "student":
+      query.class = {
+        students: { some: { id: currentUserId! } },
+      };
+      break;
+    case "parent":
+      query.class = {
+        students: { some: { parentId: currentUserId! } },
+      };
+      break;
+    default:
+      break;
   }
   const [lessons, count] = await prisma.$transaction([
     prisma.lesson.findMany({
@@ -92,8 +113,12 @@ const LessonListPage = async ({
         </td>
         <td>
           <div className="flex items-center gap-2">
-            <FormModel table="lesson" type="update" />
-            {role === "admin" && <FormModel table="lesson" type="delete" />}
+            {role === "admin" && (
+              <>
+                <FormModel table="lesson" type="update" />
+                <FormModel table="lesson" type="delete" />
+              </>
+            )}
           </div>
         </td>
       </tr>
@@ -114,12 +139,7 @@ const LessonListPage = async ({
               <Image src="/sort.png" alt="filter" width={15} height={15} />
             </button>
 
-            {role === "admin" && (
-              // <button className="h-8 w-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
-              //   <Image src="/plus.png" alt="filter" width={15} height={15} />
-              // </button>
-              <FormModel table="lesson" type="create" />
-            )}
+            {role === "admin" && <FormModel table="lesson" type="create" />}
           </div>
         </div>
       </div>
