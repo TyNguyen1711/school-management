@@ -1,7 +1,19 @@
+import { prisma } from "@/libs/prisma";
 import Image from "next/image";
 import React from "react";
 
-const UserCard = ({ type }: { type: string }) => {
+const UserCard = async ({
+  type,
+}: {
+  type: "admins" | "teachers" | "students" | "parents";
+}) => {
+  const modelMap: Record<typeof type, any> = {
+    admins: prisma.admin,
+    teachers: prisma.teacher,
+    students: prisma.student,
+    parents: prisma.parent,
+  };
+  const data = await modelMap[type].count();
   return (
     <div className="rounded-2xl odd:bg-[#CFCEFF] even:bg-[#FAE27C] p-4 flex-1">
       <div className="font-bold text-lg mb-2 flex flex-col">
@@ -11,7 +23,7 @@ const UserCard = ({ type }: { type: string }) => {
           </div>
           <Image src="/more.png" alt="more" width={24} height={24} />
         </div>
-        <div className="text-2xl font-semibold my-4">1,234</div>
+        <div className="text-2xl font-semibold my-4">{data!}</div>
         <div className="capitalize text-sm font-medium text-gray-600">
           {type}
         </div>

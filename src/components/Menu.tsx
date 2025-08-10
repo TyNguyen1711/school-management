@@ -119,6 +119,7 @@ const menuItems = [
 ];
 const Menu = async () => {
   const user = await currentUser();
+
   const role = user?.publicMetadata.role as string;
   return (
     <div>
@@ -133,7 +134,7 @@ const Menu = async () => {
                 item.visible.includes(role) && (
                   <li key={item.label} className="mt-2">
                     <Link
-                      href={item.href}
+                      href={item.label === "Home" ? `/${role}` : item.href}
                       className="flex items-center justify-center lg:justify-start md:px-2 gap-4 py-2 hover:bg-[#EDF9FD] rounded"
                     >
                       <Image

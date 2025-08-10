@@ -11,14 +11,7 @@ import { use, useEffect } from "react";
 export default function SignInPage() {
   const { isSignedIn, user, isLoaded } = useUser();
   const router = useRouter();
-  console.log(
-    "User:",
-    user,
-    "Is Signed In:",
-    isSignedIn,
-    "Is Loaded:",
-    isLoaded
-  );
+
   useEffect(() => {
     const role = user?.publicMetadata?.role;
     if (isSignedIn && isLoaded && role) {

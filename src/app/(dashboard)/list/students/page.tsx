@@ -10,10 +10,10 @@ import Link from "next/link";
 import React from "react";
 import { Prisma } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
-import { checkRole } from "@/libs/utils";
+import { checkCurrentId, checkRole } from "@/libs/utils";
 
 type StudentList = Student & { class: Class };
-const columns = [
+const columns_temp = [
   {
     header: "Info",
     accessor: "info",
@@ -50,6 +50,8 @@ const StudentListPage = async ({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
   const role = await checkRole();
+  const currentUserId = await checkCurrentId();
+  const columns = role === "admin" ? columns_temp : columns_temp.slice(0, -1);
   const { page, ...queryParams } = await searchParams;
   const p = page ? parseInt(page) : 1;
   const query: Prisma.StudentWhereInput = {};

@@ -5,7 +5,6 @@ import React from "react";
 
 const Navbar = async () => {
   const user = await currentUser();
-  console.log("Current User:", user);
 
   return (
     <div className="flex justify-between items-center">

@@ -18,8 +18,6 @@ export default clerkMiddleware(async (auth, req) => {
   // console.log('User Role:', role)
   for(const { matcher, allowedRoles } of matchers) {
     if(matcher(req) && !allowedRoles.includes(role!)) {
-      console.log(100)
-      console.log(`Access denied for role "${role}" on route "${req.nextUrl.pathname}"`)
       return NextResponse.redirect(new URL(`/${role}`, req.url))
     }
 }})
