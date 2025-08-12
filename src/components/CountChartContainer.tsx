@@ -8,8 +8,7 @@ const CountChartContainer = async () => {
     by: ["sex"],
     _count: true,
   });
-  console.log(1000);
-  console.log(data);
+
   const boys = data.find((item) => item.sex === "MALE")?._count || 0;
   const girls = data.find((item) => item.sex === "FEMALE")?._count || 0;
 

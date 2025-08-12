@@ -37,7 +37,6 @@ const AttendanceChartContrainer = async () => {
     const itemDate = new Date(item.date);
     const itemDayOfWeek = itemDate.getDay();
 
-    // Only process weekdays (Monday = 1, Friday = 5)
     if (itemDayOfWeek >= 1 && itemDayOfWeek <= 5) {
       const dayName = nameDaysOfWeek[itemDayOfWeek - 1];
       if (item.present) {

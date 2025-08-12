@@ -6,7 +6,12 @@ import EventCalendar from "@/components/EventCalendar";
 import Announcements from "@/components/Announcements";
 import CountChartContainer from "@/components/CountChartContainer";
 import AttendanceChartContrainer from "@/components/AttendanceChartContrainer";
-const AdminPage = () => {
+import EvenCalendarContainer from "@/components/EventCalendarContainer";
+const AdminPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="w-full lg:w-2/3 flex flex-col gap-8">
@@ -31,7 +36,8 @@ const AdminPage = () => {
       </div>
       <div className="w-full lg:w-1/3 flex flex-col gap-6">
         <div className="">
-          <EventCalendar />
+          {/* <EventCalendar /> */}
+          <EvenCalendarContainer searchParams={searchParams} />
           <Announcements />
         </div>
       </div>
