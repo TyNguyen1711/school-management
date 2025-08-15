@@ -1,15 +1,18 @@
 import Announcements from "@/components/Announcements";
 import BigCalendar from "@/components/BigCalendar";
+import BigCalendarContainer from "@/components/BigCalendarContainer";
 import EventCalendar from "@/components/EventCalendar";
+import { checkCurrentId } from "@/libs/utils";
 import React from "react";
 
-const TeacherPage = () => {
+const TeacherPage = async () => {
+  const currentId = await checkCurrentId();
   return (
     <div className="flex flex-col xl:flex-row gap-4 flex-1">
       <div className="w-full xl:w-2/3">
         <div className="h-full bg-white rounded p-4">
           <div className="capitialize text-xl font-semibold">Schedule</div>
-          <BigCalendar />
+          <BigCalendarContainer type="teacherId" id={currentId!} />
         </div>
       </div>
       <div className="w-full xl:w-1/3">
