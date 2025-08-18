@@ -1,44 +1,49 @@
 "use client";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TeacherForm from "./forms/TeacherForm";
 import StudentForm from "./forms/StudentForm";
 import ParentForm from "./forms/ParentForm";
 import ExamForm from "./forms/ExamForm";
 import EventForm from "./forms/EventForm";
+import SubjectForm from "./forms/SubjectForm";
+import { deleteSubject } from "@/libs/action";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { FormContainerProps } from "./FormContainer";
 
 const forms: {
-  [key: string]: (type: "create" | "update", data?: any) => React.ReactElement;
+  [key: string]: (
+    setOpen: React.Dispatch<React.SetStateAction<boolean>>,
+    type: "create" | "update",
+    data?: any
+  ) => React.ReactElement;
 } = {
-  teacher: (type, data) => <TeacherForm type={type} data={data} />,
-  student: (type, data) => <StudentForm type={type} data={data} />,
-  parent: (type, data) => <ParentForm type={type} data={data} />,
-  exam: (type, data) => <ExamForm type={type} data={data} />,
-  event: (type, data) => <EventForm type={type} data={data} />,
+  teacher: (setOpen, type, data) => <TeacherForm type={type} data={data} />,
+  student: (setOpen, type, data) => <StudentForm type={type} data={data} />,
+  parent: (setOpen, type, data) => <ParentForm type={type} data={data} />,
+  exam: (setOpen, type, data) => <ExamForm type={type} data={data} />,
+  subject: (setOpen, type, data) => (
+    <SubjectForm setOpen={setOpen} type={type} data={data} />
+  ),
+  event: (setOpen, type, data) => <EventForm type={type} data={data} />,
 };
-const FormModel = ({
-  table,
-  type,
-  data,
-  id,
-}: {
-  table:
-    | "teacher"
-    | "student"
-    | "parent"
-    | "subject"
-    | "class"
-    | "lesson"
-    | "exam"
-    | "assignment"
-    | "result"
-    | "attendance"
-    | "event"
-    | "announcement";
-  type: "create" | "update" | "delete";
-  data?: any;
-  id?: number | string;
-}) => {
+const deleteActionMap = {
+  subject: deleteSubject,
+  //   class: deleteClass,
+  //   teacher: deleteTeacher,
+  //   student: deleteStudent,
+  //   exam: deleteExam,
+  // // TODO: OTHER DELETE ACTIONS
+  //   parent: deleteSubject,
+  //   lesson: deleteSubject,
+  //   assignment: deleteSubject,
+  //   result: deleteSubject,
+  //   attendance: deleteSubject,
+  //   event: deleteSubject,
+  //   announcement: deleteSubject,
+};
+const FormModel = ({ table, type, data, id }: FormContainerProps) => {
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
   id = 1;
   const bgColor =
@@ -48,18 +53,66 @@ const FormModel = ({
       ? "bg-[#C3EBFA]"
       : "bg-[#CFCEFF]";
   const [open, setOpen] = useState(false);
+
   const Form = () => {
+    const [state, formAction, isPending] = React.useActionState(deleteSubject, {
+      success: false,
+      error: false,
+    });
+    const router = useRouter();
+
+    useEffect(() => {
+      if (state.success) {
+        toast(`Subject has been deleted`);
+        router.refresh();
+      }
+    }, [state]);
+
     return type === "delete" && id ? (
-      <div className="flex flex-col gap-4 p-4">
+      <form action={formAction} className="flex flex-col gap-4 p-4">
+        <input type="hidden" name="id" value={data.id} />
         <div className="text-center text-lg font-semibold">
           All data will be lost. Are you sure you want to delete this {table}?
         </div>
-        <button className="bg-red-600 text-white py-2 px-4 rounded-md border-none w-max self-center">
-          Delete
+        <button
+          className={`text-white py-2 px-4 rounded-md border-none w-max self-center flex items-center justify-center gap-2 ${
+            isPending
+              ? "bg-red-400 cursor-not-allowed"
+              : "bg-red-600 hover:bg-red-700"
+          }`}
+          disabled={isPending}
+        >
+          {isPending ? (
+            <>
+              <svg
+                className="animate-spin h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              Deleting...
+            </>
+          ) : (
+            "Delete"
+          )}
         </button>
-      </div>
+      </form>
     ) : type === "create" || type === "update" ? (
-      forms[table](type, data)
+      forms[table](setOpen, type, data)
     ) : (
       "Not found"
     );
