@@ -1,73 +1,24 @@
-// "use client";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import React from "react";
-// import { useForm } from "react-hook-form";
-// import * as z from "zod";
-// import InputField from "../InputField";
-// import Image from "next/image";
-// import { subjectSchema } from "@/libs/formValidationSchema";
-// import { createSubject } from "@/libs/action";
-// import { useFormState } from "react-dom";
-// import ReactDOM from "react-dom";
-// const SubjectForm = ({
-//   type,
-//   data,
-// }: {
-//   type: "create" | "update";
-//   data?: any;
-// }) => {
-//   const {
-//     register,
-//     handleSubmit,
-//     formState: { errors },
-//   } = useForm({
-//     resolver: zodResolver(subjectSchema),
-//   });
-//   const [state, formAction] = ReactDOM.useFormState(createSubject, {
-//     success: false,
-//     error: false,
-//   });
-//   const onSubmit = handleSubmit((data) => {
-//     // createSubject(data);
-//     formAction(data);
-//     console.log(data);
-//   });
-//   return (
-//     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
-//       <h1 className="text-xl font-semibold">
-//         {type === "create" ? "Create a new subject" : "Update the subject"}
-//       </h1>
-
-//       <div className="flex justify-between gap-3 flex-col md:flex-row">
-//         <InputField
-//           label="Name Subject"
-//           name="name"
-//           defaultValue={data?.subject}
-//           register={register}
-//           error={errors.name}
-//         />
-//       </div>
-//       {state.error && <span>Something wrong!!!</span>}
-//       <button className="bg-blue-500 p-2 text-white rounded-md">
-//         {type === "create" ? "Create" : "Update"}
-//       </button>
-//     </form>
-//   );
-// };
-
-// export default SubjectForm;
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import InputField from "../InputField";
-import { subjectSchema } from "@/libs/formValidationSchema";
-import { createSubject, updateSubject } from "@/libs/action";
+import {
+  ClassSchema,
+  classSchema,
+  subjectSchema,
+} from "@/libs/formValidationSchema";
+import {
+  createClass,
+  createSubject,
+  updateClass,
+  updateSubject,
+} from "@/libs/action";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
-const SubjectForm = ({
+const ClassForm = ({
   setOpen,
   type,
   data,
@@ -82,11 +33,11 @@ const SubjectForm = ({
     register,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(subjectSchema),
+    resolver: zodResolver(classSchema),
   });
 
   const [state, formAction, isPending] = React.useActionState(
-    type === "create" ? createSubject : updateSubject,
+    type === "create" ? createClass : updateClass,
     {
       success: false,
       error: false,
@@ -96,7 +47,7 @@ const SubjectForm = ({
   useEffect(() => {
     if (state.success) {
       toast(
-        `Subject has been ${
+        `Class has been ${
           type === "create" ? "created" : "updated"
         } successfully!`
       );
@@ -105,7 +56,7 @@ const SubjectForm = ({
     }
   }, [state]);
 
-  const { teachers } = relatedData || {};
+  const { teachers, grades } = relatedData || {};
   return (
     <form className="flex flex-col gap-8" action={formAction}>
       <h1 className="text-xl font-semibold">
@@ -113,7 +64,6 @@ const SubjectForm = ({
       </h1>
       {type === "update" && data?.id && (
         <input type="hidden" name="id" value={data.id} />
-
         // <InputField
         //   label="Id"
         //   name="id"
@@ -125,38 +75,72 @@ const SubjectForm = ({
       )}
       <div className="flex justify-between gap-3 flex-col md:flex-row">
         <InputField
-          label="Name Subject"
+          label="Class Name"
           name="name"
           defaultValue={data?.name}
           register={register}
           error={errors?.name}
         />
+        <InputField
+          label="Capacity"
+          name="capacity"
+          defaultValue={data?.capacity}
+          register={register}
+          error={errors?.capacity}
+        />
         <div className="flex flex-col gap-2 w-full md:w-1/4">
           <label className="text-xs text-gray-500">Teachers</label>
           <select
-            multiple
-            {...register("teachers")}
+            {...register("supervisorId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
             defaultValue={data?.teachers}
           >
             {teachers?.map(
               (teacher: { id: string; name: string; surname: string }) => {
                 return (
-                  <option key={teacher.id} value={teacher.id}>
+                  <option
+                    key={teacher.id}
+                    value={teacher.id}
+                    selected={data?.supervisorId === teacher.id}
+                  >
                     {teacher.name} {teacher.surname}
                   </option>
                 );
               }
             )}
           </select>
-          {errors.teachers?.message && (
+          {errors.supervisorId?.message && (
             <p className="text-xs text-red-400">
-              {errors.teachers.message.toString()}
+              {errors.supervisorId.message.toString()}
             </p>
           )}
         </div>
       </div>
-
+      <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <label className="text-xs text-gray-500">Grade</label>
+        <select
+          {...register("gradeId")}
+          className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+          defaultValue={data?.gradeId}
+        >
+          {grades?.map((grade: { id: number; level: number }) => {
+            return (
+              <option
+                key={grade.id}
+                value={grade.id}
+                selected={data?.gradeId === grade.id}
+              >
+                {grade.level}
+              </option>
+            );
+          })}
+        </select>
+        {errors.supervisorId?.message && (
+          <p className="text-xs text-red-400">
+            {errors.supervisorId.message.toString()}
+          </p>
+        )}
+      </div>
       {state.error && <span>Something went wrong!</span>}
 
       <button
@@ -170,4 +154,4 @@ const SubjectForm = ({
   );
 };
 
-export default SubjectForm;
+export default ClassForm;

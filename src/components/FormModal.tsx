@@ -7,43 +7,64 @@ import ParentForm from "./forms/ParentForm";
 import ExamForm from "./forms/ExamForm";
 import EventForm from "./forms/EventForm";
 import SubjectForm from "./forms/SubjectForm";
-import { deleteSubject } from "@/libs/action";
+import { deleteClass, deleteSubject } from "@/libs/action";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FormContainerProps } from "./FormContainer";
+import ClassForm from "./forms/ClassForm";
 
 const forms: {
   [key: string]: (
     setOpen: React.Dispatch<React.SetStateAction<boolean>>,
     type: "create" | "update",
-    data?: any
+    data?: any,
+    relatedData?: any
   ) => React.ReactElement;
 } = {
   teacher: (setOpen, type, data) => <TeacherForm type={type} data={data} />,
   student: (setOpen, type, data) => <StudentForm type={type} data={data} />,
   parent: (setOpen, type, data) => <ParentForm type={type} data={data} />,
   exam: (setOpen, type, data) => <ExamForm type={type} data={data} />,
-  subject: (setOpen, type, data) => (
-    <SubjectForm setOpen={setOpen} type={type} data={data} />
+  subject: (setOpen, type, data, relatedData) => (
+    <SubjectForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
+  class: (setOpen, type, data, relatedData) => (
+    <ClassForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
   ),
   event: (setOpen, type, data) => <EventForm type={type} data={data} />,
 };
 const deleteActionMap = {
   subject: deleteSubject,
-  //   class: deleteClass,
-  //   teacher: deleteTeacher,
-  //   student: deleteStudent,
-  //   exam: deleteExam,
-  // // TODO: OTHER DELETE ACTIONS
-  //   parent: deleteSubject,
-  //   lesson: deleteSubject,
-  //   assignment: deleteSubject,
-  //   result: deleteSubject,
-  //   attendance: deleteSubject,
-  //   event: deleteSubject,
-  //   announcement: deleteSubject,
+  class: deleteClass,
+  teacher: deleteSubject,
+  student: deleteSubject,
+  exam: deleteSubject,
+  // TODO: OTHER DELETE ACTIONS
+  parent: deleteSubject,
+  lesson: deleteSubject,
+  assignment: deleteSubject,
+  result: deleteSubject,
+  attendance: deleteSubject,
+  event: deleteSubject,
+  announcement: deleteSubject,
 };
-const FormModel = ({ table, type, data, id }: FormContainerProps) => {
+const FormModal = ({
+  table,
+  type,
+  data,
+  id,
+  relatedData,
+}: FormContainerProps & { relatedData?: any }) => {
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
   id = 1;
   const bgColor =
@@ -55,10 +76,13 @@ const FormModel = ({ table, type, data, id }: FormContainerProps) => {
   const [open, setOpen] = useState(false);
 
   const Form = () => {
-    const [state, formAction, isPending] = React.useActionState(deleteSubject, {
-      success: false,
-      error: false,
-    });
+    const [state, formAction, isPending] = React.useActionState(
+      deleteActionMap[table],
+      {
+        success: false,
+        error: false,
+      }
+    );
     const router = useRouter();
 
     useEffect(() => {
@@ -112,7 +136,7 @@ const FormModel = ({ table, type, data, id }: FormContainerProps) => {
         </button>
       </form>
     ) : type === "create" || type === "update" ? (
-      forms[table](setOpen, type, data)
+      forms[table](setOpen, type, data, relatedData)
     ) : (
       "Not found"
     );
@@ -145,4 +169,4 @@ const FormModel = ({ table, type, data, id }: FormContainerProps) => {
   );
 };
 
-export default FormModel;
+export default FormModal;

@@ -6,8 +6,9 @@ type InputFieldProps = {
   register: any;
   name: string;
   defaultValue?: string;
-  error?: FieldError;
+  error?: any;
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
+  hidden?: boolean;
 };
 const InputField = ({
   label,
@@ -17,9 +18,10 @@ const InputField = ({
   defaultValue,
   error,
   inputProps,
+  hidden,
 }: InputFieldProps) => {
   return (
-    <div className="flex flex-col gap-2 w-full md:w-1/4">
+    <div className={hidden ? "hidden" : "flex flex-col gap-2 w-full md:w-1/4"}>
       <label className="text-xs text-gray-500">{label}</label>
       <input
         type={type}
@@ -29,7 +31,7 @@ const InputField = ({
         defaultValue={defaultValue}
       />
       {error?.message && (
-        <p className="text-xs text-red-400">{error.message.toString()}</p>
+        <p className="text-xs text-red-400">{error.message?.toString()}</p>
       )}
     </div>
   );
