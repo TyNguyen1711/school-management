@@ -11,6 +11,7 @@ import { ITEM_PER_PAGE } from "@/libs/setting";
 import { Prisma } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { checkCurrentId, checkRole } from "@/libs/utils";
+import FormContainer from "@/components/FormContainer";
 type teacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
 const columns_temp = [
   {
@@ -124,7 +125,9 @@ const TeacherListPage = async ({
                 <Image src="/view.png" alt="" width={16} height={16} />
               </button>
             </Link>
-            {role === "admin" && <FormModel table="teacher" type="delete" />}
+            {role === "admin" && (
+              <FormContainer table="teacher" type="delete" data={data} />
+            )}
           </div>
         </td>
       </tr>
@@ -146,10 +149,7 @@ const TeacherListPage = async ({
             </button>
 
             {role === "admin" && (
-              // <button className="h-8 w-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
-              //   <Image src="/plus.png" alt="filter" width={15} height={15} />
-              // </button>
-              <FormModel table="teacher" type="create" />
+              <FormContainer table="teacher" type="create" />
             )}
           </div>
         </div>

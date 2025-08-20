@@ -1,46 +1,118 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+
 import InputField from "../InputField";
 import Image from "next/image";
+import { teacherSchema } from "@/libs/formValidationSchema";
+import { createTeacher, updateTeacher } from "@/libs/action";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { CldUploadWidget } from "next-cloudinary";
 
-const schema = z.object({
-  username: z
-    .string()
-    .min(3, { message: "Username must be at least 3 charaters long!" })
-    .max(20, { message: "Username must be at most 20 charters long!" }),
-  email: z.string().email({ message: "Invalid email address!" }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters long!" }),
-  firstname: z.string().min(1, { message: "Firstname is required !" }),
-  lastname: z.string().min(1, { message: "Lastname is required !" }),
-  phone: z.string().min(1, { message: "Phone is required !" }),
-  address: z.string().min(1, { message: "Address is required !" }),
-  bloodType: z.string().min(1, { message: "Blood type is required!" }),
-  birthday: z.date({ message: "Birthday is required!" }),
-  sex: z.enum(["male, female"], { message: "Sex is required!" }),
-  photo: z.instanceof(File, { message: "Image is required!" }),
-});
 const TeacherForm = ({
+  setOpen,
   type,
   data,
+  relatedData,
 }: {
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   type: "create" | "update";
   data?: any;
+  relatedData?: any;
 }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(teacherSchema),
   });
+
+  const [state, formAction] = React.useActionState(
+    type === "create" ? createTeacher : updateTeacher,
+    {
+      success: false,
+      error: false,
+    }
+  );
+  const [img, setImage] = useState<any>();
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  useEffect(() => {
+    if (state.success) {
+      toast(
+        `Subject has been ${
+          type === "create" ? "created" : "updated"
+        } successfully!`
+      );
+      router.refresh();
+      setOpen(false);
+    }
+  }, [state]);
+
   const onSubmit = handleSubmit((data) => {
-    console.log(data);
+    const formData = new FormData();
+
+    // Required fields
+    formData.append("username", data.username);
+    formData.append("name", data.name);
+    formData.append("surname", data.surname);
+    formData.append("address", data.address);
+    formData.append("bloodType", data.bloodType);
+    formData.append("sex", data.sex);
+
+    // Date field - convert to ISO string
+    if (data.birthday) {
+      formData.append("birthday", data.birthday.toISOString());
+    }
+
+    // if (data.password && data.password.trim() !== "") {
+    //   formData.append("password", data.password);
+    // }
+
+    // if (data.email && data.email.trim() !== "") {
+    //   formData.append("email", data.email);
+    // }
+
+    // if (data.phone && data.phone.trim() !== "") {
+    //   formData.append("phone", data.phone);
+    // }
+
+    // if (data.img && data.img.trim() !== "") {
+    //   formData.append("img", data.img);
+    // }
+
+    // if (data.subjects && Array.isArray(data.subjects)) {
+    //   data.subjects.forEach((subjectId) => {
+    //     formData.append("subjects", subjectId);
+    //   });
+    // }
+
+    formData.append("password", data.password || "");
+
+    formData.append("email", data.email || "");
+
+    formData.append("phone", data.phone || "");
+
+    formData.append("img", data.img || "");
+
+    if (data.subjects && Array.isArray(data.subjects)) {
+      data.subjects.forEach((subjectId) => {
+        formData.append("subjects", subjectId);
+      });
+    }
+
+    if (type === "update" && data?.id) {
+      formData.append("id", data.id.toString());
+    }
+
+    startTransition(() => {
+      formAction(formData);
+    });
   });
+  const { subjects } = relatedData;
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
@@ -50,7 +122,9 @@ const TeacherForm = ({
         Authentication Infomation
       </div>
       <div className="flex justify-between gap-3 flex-col md:flex-row">
-        {" "}
+        {type === "update" && data?.id && (
+          <input type="hidden" value={data.id} {...register("id")} />
+        )}
         <InputField
           label="Username"
           name="username"
@@ -73,23 +147,21 @@ const TeacherForm = ({
           error={errors.password}
         />
       </div>
-
       <div className="text-xs text-gray-500">Personal infomation</div>
       <div className="flex justify-between gap-3 flex-col md:flex-row">
-        {" "}
         <InputField
           label="First Name"
-          name="firstname"
-          defaultValue={data?.firstName}
+          name="name"
+          defaultValue={data?.name}
           register={register}
-          error={errors.firstname}
+          error={errors.name}
         />
         <InputField
           label="Last Name"
-          name="lastname"
-          defaultValue={data?.lastName}
+          name="surname"
+          defaultValue={data?.surname}
           register={register}
-          error={errors.lastname}
+          error={errors.surname}
         />
         <InputField
           label="Phone"
@@ -100,7 +172,6 @@ const TeacherForm = ({
         />
       </div>
       <div className="flex justify-between gap-3 flex-col md:flex-row">
-        {" "}
         <InputField
           label="Address"
           name="address"
@@ -119,7 +190,7 @@ const TeacherForm = ({
           label="Birthday"
           type="date"
           name="birthday"
-          defaultValue={data?.dateOfBirth}
+          defaultValue={data?.birthday.toISOString().split("T")[0]}
           register={register}
           error={errors.birthday}
         />
@@ -133,8 +204,8 @@ const TeacherForm = ({
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
             defaultValue={data?.sex}
           >
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
           </select>
           {errors.sex?.message && (
             <p className="text-xs text-red-400">
@@ -142,31 +213,73 @@ const TeacherForm = ({
             </p>
           )}
         </div>
-        <div className="flex flex-col gap-2 w-full md:w-1/4 justify-center mt-4 md:mt-0">
-          <label
-            className="text-xs text-gray-500 flex items-center justify-center gap-2 cursor-pointer"
-            htmlFor="img"
+        <div className="flex flex-col gap-2 w-full md:w-1/4">
+          <label className="text-xs text-gray-500">Subjects</label>
+          <select
+            multiple
+            {...register("subjects")}
+            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            defaultValue={data?.subjects}
           >
-            <Image src="/upload.png" alt="" height={28} width={28} />
-            <span>Upload a photo</span>
-          </label>
-          <input
-            id="img"
-            className="hidden"
-            type="file"
-            {...register("photo")}
-            // defaultValue={data?.img}
-          />
-          {errors.photo?.message && (
+            {subjects.map((subject: { id: number; name: string }) => {
+              return (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </option>
+              );
+            })}
+          </select>
+          {errors.sex?.message && (
             <p className="text-xs text-red-400">
-              {errors.photo.message.toString()}
+              {errors.sex.message.toString()}
             </p>
           )}
         </div>
+        <input
+          type="hidden"
+          name="img"
+          value={img?.secure_url || img?.url || ""}
+        />
+        <div className="flex flex-col gap-2 w-full md:w-1/4 justify-center mt-4 md:mt-0 items-center">
+          <CldUploadWidget
+            uploadPreset="school"
+            onSuccess={(result, { widget }) => {
+              setImage(result.info);
+              widget.close();
+            }}
+          >
+            {({ open }) => {
+              return (
+                <div
+                  onClick={() => open()}
+                  className="text-xs text-gray-500 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Image src="/upload.png" alt="" height={28} width={28} />
+                  <span>Upload a photo</span>
+                </div>
+              );
+            }}
+          </CldUploadWidget>
+          {img && (
+            <Image
+              src={img?.secure_url || img?.url || ""}
+              alt="Teacher profile picture"
+              width={100}
+              height={100}
+              className="rounded-md"
+            />
+          )}
+        </div>
       </div>
-
-      <button className="bg-blue-500 p-2 text-white rounded-md">
-        {type === "create" ? "Create" : "Update"}
+      {state.error && (
+        <span className="text-red-500">Something went wrong!</span>
+      )}
+      <button
+        type="submit"
+        className="bg-blue-500 p-2 text-white rounded-md"
+        disabled={isPending}
+      >
+        {isPending ? "Processing..." : type === "create" ? "Create" : "Update"}
       </button>
     </form>
   );

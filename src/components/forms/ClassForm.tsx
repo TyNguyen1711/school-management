@@ -1,6 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffect } from "react";
+import React, { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import InputField from "../InputField";
@@ -31,19 +31,22 @@ const ClassForm = ({
 }) => {
   const {
     register,
+    handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(classSchema),
   });
 
-  const [state, formAction, isPending] = React.useActionState(
+  const [state, formAction] = React.useActionState(
     type === "create" ? createClass : updateClass,
     {
       success: false,
       error: false,
     }
   );
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
   useEffect(() => {
     if (state.success) {
       toast(
@@ -57,21 +60,31 @@ const ClassForm = ({
   }, [state]);
 
   const { teachers, grades } = relatedData || {};
+  const onSubmit = handleSubmit((data) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("capacity", data.capacity.toString());
+    formData.append("gradeId", data.gradeId.toString());
+    if (data.supervisorId) {
+      formData.append("supervisorId", data.supervisorId);
+    }
+    // Add ID for updates
+    if (type === "update" && data?.id) {
+      formData.append("id", data.id.toString());
+    }
+
+    // Wrap the action call in startTransition
+    startTransition(() => {
+      formAction(formData);
+    });
+  });
   return (
-    <form className="flex flex-col gap-8" action={formAction}>
+    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
         {type === "create" ? "Create a new subject" : "Update the subject"}
       </h1>
       {type === "update" && data?.id && (
-        <input type="hidden" name="id" value={data.id} />
-        // <InputField
-        //   label="Id"
-        //   name="id"
-        //   defaultValue={data?.id}
-        //   register={register}
-        //   error={errors?.id}
-        //   hidden
-        // />
+        <input type="hidden" {...register("id")} value={data.id} />
       )}
       <div className="flex justify-between gap-3 flex-col md:flex-row">
         <InputField
@@ -98,11 +111,7 @@ const ClassForm = ({
             {teachers?.map(
               (teacher: { id: string; name: string; surname: string }) => {
                 return (
-                  <option
-                    key={teacher.id}
-                    value={teacher.id}
-                    selected={data?.supervisorId === teacher.id}
-                  >
+                  <option key={teacher.id} value={teacher.id}>
                     {teacher.name} {teacher.surname}
                   </option>
                 );
@@ -125,11 +134,7 @@ const ClassForm = ({
         >
           {grades?.map((grade: { id: number; level: number }) => {
             return (
-              <option
-                key={grade.id}
-                value={grade.id}
-                selected={data?.gradeId === grade.id}
-              >
+              <option key={grade.id} value={grade.id}>
                 {grade.level}
               </option>
             );

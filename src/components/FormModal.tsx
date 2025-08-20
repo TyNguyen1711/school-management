@@ -7,7 +7,7 @@ import ParentForm from "./forms/ParentForm";
 import ExamForm from "./forms/ExamForm";
 import EventForm from "./forms/EventForm";
 import SubjectForm from "./forms/SubjectForm";
-import { deleteClass, deleteSubject } from "@/libs/action";
+import { deleteClass, deleteSubject, deleteTeacher } from "@/libs/action";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FormContainerProps } from "./FormContainer";
@@ -21,7 +21,14 @@ const forms: {
     relatedData?: any
   ) => React.ReactElement;
 } = {
-  teacher: (setOpen, type, data) => <TeacherForm type={type} data={data} />,
+  teacher: (setOpen, type, data, relatedData) => (
+    <TeacherForm
+      setOpen={setOpen}
+      type={type}
+      data={data}
+      relatedData={relatedData}
+    />
+  ),
   student: (setOpen, type, data) => <StudentForm type={type} data={data} />,
   parent: (setOpen, type, data) => <ParentForm type={type} data={data} />,
   exam: (setOpen, type, data) => <ExamForm type={type} data={data} />,
@@ -46,7 +53,7 @@ const forms: {
 const deleteActionMap = {
   subject: deleteSubject,
   class: deleteClass,
-  teacher: deleteSubject,
+  teacher: deleteTeacher,
   student: deleteSubject,
   exam: deleteSubject,
   // TODO: OTHER DELETE ACTIONS
